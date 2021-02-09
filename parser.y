@@ -9,6 +9,7 @@ void yyerror(const char* s);
 
 /* bison の宣言部 */
 // 意味値の型とその識別子
+// node.hで定義したクラスの型を書く
 %union{
   int     int_val;
   double  double_val;
@@ -40,7 +41,8 @@ void yyerror(const char* s);
 // 各規則で生成されるNodeはNode.hで定義されるインスタンスで、
 // 各規則におけるrootノードを表している。
 program :               { $$ = $1; }
-        | block         { }
+        | func_decl     {}
+        | func_defi     {}
         ;
 
 block : '{' stmt_list '}' {}
@@ -50,12 +52,15 @@ stmt_list : stmt            {}
           | stmt_list stmt  {}
           ;
 
-stmt : func_decl | var_decl {}
+stmt : var_decl             {}
      | expr                 { $$ = $1; }
      | if_stmt              {}
      ;
 
-func_decl : ident ident '(' func_args_decl ')' block  {}
+func_decl : ident ident '(' func_args_decl ')' {}
+          ;
+
+func_defi : ident ident '(' func_args_decl ')' block {}
           ;
 
 func_args_decl :                              {}

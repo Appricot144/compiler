@@ -1,32 +1,56 @@
-Node.hの設計から始める
+/*やること*/
+・Nodeの設計
+    構文規則は、「キツネさんでもわかるLLVM」を参考。
+    Nodeの作り方は、（https://gnuu.org/2009/09/18/writing-your-own-toy-compiler/）がシンプルそう。
+・Nodeクラスの仕様に合わせて%union %token %type を書く。
 
-構文規則は、「キツネさんでもわかるLLVM」を参考。
-Nodeの作り方は、（https://gnuu.org/2009/09/18/writing-your-own-toy-compiler/）がシンプルそう。
+・CodeGenの作成
+・CodeGenに記号表を作る。
 
-Nodeクラスの仕様に合わせて%union %token %type を書く。
-
+/* 疑問 */
 ASTを作るだけでいいのか？
 ASTはrootからたどれる木構造という意味？
 ASTはどのような形で実装されている必要がある？（ie. ポインタを使った連結リストで木構造を構成する）
-
 LLVMはどうやってASTをたどるのか？
-
+CodeGenではなにをすればいい？
+Passの実装までできるか？
 
 /* Node list */
 Node 　　//基底クラス
 
-Block
-  Statment_list   //Statmentの集合
+Function_declaration
+Function_definition
 
-Statment  //宣言や定義,if文などの文
-  Function_declaration
-  Variable_declaration
-  if_statment
+  Block
+  (メンバ)Statment_list   //Statmentの集合
 
-  Expression　//意味値をもつようになる文
-    Integer
-    Double
-    Char
-    Function_call
-    Assignment
-    Binary_operator
+  Statment  //宣言や定義,if文,式などの文
+    Variable_declaration
+    If_statment
+
+    Expression　//式
+      Integer
+      Double
+      Char
+      Function_call
+      Assignment
+      Binary_operator
+
+クラス名
+node_Block
+node_Statment
+node_Function_declaration
+node_Variable_declaration
+node_If_statment
+node_Expression
+node_Integer
+node_Double
+node_Char
+node_Function_call
+node_Assignment
+node_Binary_operator
+
+/* ASTをたどりながらすること。 */
+// 各規則におけるrootノードの生成。
+// 変数,関数の定義,関数の宣言を行う文を見つけた時に、
+// それぞれの記号表に変数,関数のデータを登録すること。
