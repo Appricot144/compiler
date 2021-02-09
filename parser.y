@@ -24,9 +24,11 @@ void yyerror(const char* s);
 %token <identifier>   IDENTIFIER
 
 // 非終端記号の宣言
-%type block stmt expr term factor
+%type block stmt_list stmt if_stmt func_decl func_args_decl var_decl call_args ident expr factor
 
 // 結合性と優先順位の指定
+%left '+' '-'
+%left '*' '/'
 
 // 開始記号
 %start program
@@ -41,29 +43,53 @@ program :               { $$ = $1; }
         | block         { }
         ;
 
-block : stmt
+block : '{' stmt_list '}' {}
       ;
 
-stmt : expr             { $$ = $1; }
-     |
+stmt_list : stmt            {}
+          | stmt_list stmt  {}
+          ;
+
+stmt : func_decl | var_decl {}
+     | expr                 { $$ = $1; }
+     | if_stmt              {}
      ;
 
-expr : term                 { $$ = $1; }
-     | IDENTIFIER '=' expr  { $$ =  }
-     | expr + expr          { $$ = $1 + $3; }
-     | expr - expr          { $$ = $1 - $3; }
-     ;
+func_decl : ident ident '(' func_args_decl ')' block  {}
+          ;
 
-term : factor           { $$ = $1; }
-     | term * term      { $$ = $1 * $3; }
-     | term / term      { $$ = $1 / $3; }
-     | term ^ term      { $$ = pow($1, $3); }
+func_args_decl :                              {}
+               | var_decl                     {}
+               | func_args_decl ',' var_decl  {}
+               ;
+
+var_decl : ident ident  {}
+         ;
+
+if_stmt : IF '(' expr ')' '{' block '}'                     {}
+        | IF '(' expr ')' '{' block '}' ELSE '{' block '}'  {}
+        ;
+
+call_args :                     {}
+          | expr                {}
+          | call_args ',' expr  {}
+          ;
+
+ident : IDENTIFIER  {}
+      ;
+
+expr : factor                   { $$ = $1; }
+     | ident '(' call_args ')'  {}
+     | ident '=' expr           { $$ =  }
+     | expr '+' expr            { $$ = $1 + $3; }
+     | expr '-' expr            { $$ = $1 - $3; }
+     | expr '*' expr            {}
+     | expr '/' expr            {}
      ;
 
 factor : INT            { $$ = $1; }
        | DOUBLE         { $$ = (double)$1; }
        | CHAR           { $$ = (char)$1; }
-       | IDENTIFIER     { $$ =  }
        | '(' expr ')'   { $$ = $2; }
        ;
 

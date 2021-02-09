@@ -10,3 +10,23 @@ ASTはrootからたどれる木構造という意味？
 ASTはどのような形で実装されている必要がある？（ie. ポインタを使った連結リストで木構造を構成する）
 
 LLVMはどうやってASTをたどるのか？
+
+
+/* Node list */
+Node 　　//基底クラス
+
+Block
+  Statment_list   //Statmentの集合
+
+Statment  //宣言や定義,if文などの文
+  Function_declaration
+  Variable_declaration
+  if_statment
+
+  Expression　//意味値をもつようになる文
+    Integer
+    Double
+    Char
+    Function_call
+    Assignment
+    Binary_operator
