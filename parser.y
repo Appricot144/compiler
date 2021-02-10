@@ -39,7 +39,10 @@ void yyerror(const char* s);
 /* 文法規則 */
 // 各文法規則は、その規則を認識したとき、Nodeを生成して$$に代入する。
 // 各規則で生成されるNodeはNode.hで定義されるインスタンスで、
-// 各規則におけるrootノードを表している。
+// 各規則におけるノードを表している。
+
+// 宣言時に使える型はintのみ
+// 数値としてはint double charが使える
 program :               { $$ = $1; }
         | func_decl     {}
         | func_defi     {}
@@ -57,10 +60,10 @@ stmt : var_decl             {}
      | if_stmt              {}
      ;
 
-func_decl : ident ident '(' func_args_decl ')' {}
+func_decl : "int" ident '(' func_args_decl ')' {}
           ;
 
-func_defi : ident ident '(' func_args_decl ')' block {}
+func_defi : "int" ident '(' func_args_decl ')' block {}
           ;
 
 func_args_decl :                              {}
@@ -68,11 +71,11 @@ func_args_decl :                              {}
                | func_args_decl ',' var_decl  {}
                ;
 
-var_decl : ident ident  {}
+var_decl : "int" ident  {}
          ;
 
-if_stmt : IF '(' expr ')' '{' block '}'                     {}
-        | IF '(' expr ')' '{' block '}' ELSE '{' block '}'  {}
+if_stmt : IF '(' expr ')' block             {}
+        | IF '(' expr ')' block ELSE block  {}
         ;
 
 call_args :                     {}

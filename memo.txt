@@ -18,37 +18,30 @@ Passの実装までできるか？
 /* Node list */
 Node 　　//基底クラス
 
-Function_declaration
-Function_definition
+Program
+  Function
+    Function_declaration //プロトタイプ宣言
+    Function_definition  //関数定義
 
-  Block
-  (メンバ)Statment_list   //Statmentの集合
+    Block                   //関数のbody
+    (メンバ)Statment_list     //Statmentの集合
 
-  Statment  //宣言や定義,if文,式などの文
-    Variable_declaration
-    If_statment
+      Statment                 //宣言や定義,if文,式などの文
+        Variable_declaration:NODE
+        If_statment:NODE
 
-    Expression　//式
-      Integer
-      Double
-      Char
-      Function_call
-      Assignment
-      Binary_operator
+        Expression　           //式
+          Variable:NODE
+          Integer:NODE
+          Double:NODE
+          Char:NODE
+          Function_call:NODE
+          Assignment:NODE
+          Binary_operator:NODE
+          Return:NODE
 
 クラス名
-node_Block
-node_Statment
-node_Function_declaration
-node_Variable_declaration
-node_If_statment
-node_Expression
-node_Integer
-node_Double
-node_Char
-node_Function_call
-node_Assignment
-node_Binary_operator
+node_(?????)
 
 /* ASTをたどりながらすること。 */
 // 各規則におけるrootノードの生成。
