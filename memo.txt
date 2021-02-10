@@ -19,16 +19,15 @@ Passの実装までできるか？
 Node 　　//基底クラス
 
 Program
-  Function
-    Function_declaration //プロトタイプ宣言
-    Function_definition  //関数定義
+  Function:Node //関数
+  Function_declaration:Node //プロトタイプ宣言
 
-    Block                   //関数のbody
-    (メンバ)Statment_list     //Statmentの集合
+    Block                     //関数のbody
+    (メンバ)Statement_list     //Statementの集合
 
-      Statment                 //宣言や定義,if文,式などの文
+      Statement                 //宣言や定義,if文,式などの文
         Variable_declaration:NODE
-        If_statment:NODE
+        If_statement:NODE
 
         Expression　           //式
           Variable:NODE
@@ -36,7 +35,6 @@ Program
           Double:NODE
           Char:NODE
           Function_call:NODE
-          Assignment:NODE
           Binary_operator:NODE
           Return:NODE
 
@@ -44,6 +42,6 @@ Program
 node_(?????)
 
 /* ASTをたどりながらすること。 */
-// 各規則におけるrootノードの生成。
+// 各規則におけるノードの生成。
 // 変数,関数の定義,関数の宣言を行う文を見つけた時に、
 // それぞれの記号表に変数,関数のデータを登録すること。

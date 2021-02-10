@@ -2,7 +2,8 @@
 /* C の宣言部 */
 #include "node.h"
 
-exetern int yylex();
+extern Table Symbol_table     //仮で記号表を宣言しておく 後で直されたし
+extern int yylex();
 void yyerror(const char* s);
 %}
 
