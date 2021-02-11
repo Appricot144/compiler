@@ -1,8 +1,9 @@
 %{
 /* C の宣言部 */
 #include "node.h"
+node_Program *Program;  //rootノード 最終的なAST
 
-extern Table Symbol_table     //仮で記号表を宣言しておく 後で直されたし
+// extern Table Symbol_table     //仮で記号表を宣言しておく 後で直されたし
 extern int yylex();
 void yyerror(const char* s);
 %}
@@ -12,21 +13,46 @@ void yyerror(const char* s);
 // 意味値の型とその識別子
 // node.hで定義したクラスの型を書く
 %union{
-  int     int_val;
-  double  double_val;
-  char    char_val;
-  char    *identifier;
+  Node          *node;
+  node_Function *func_defi;
+  node_Function_Declaration *func_decl;
+  node_Block    *block;
+  node_Variable_Declaration *var_decl;
+  node_Statement *stmt;
+  node_Expression *expr;
+  node_Integer  *int_val;
+  node_Double   *double_val;
+  node_Char     *char_val;
+  node_Variable *var;
+  node_Function_Call    *func_call;
+  node_Binary_Operator  *bin_op;
+  node_Return           *ret;
+  std::vector<node_Statement*>    *stmt_list;
+  std::vector<node_Expression*>   *expr_list;
+  std::vector<node_Variable*>     *var_list;
+  std::string   *string;
 }
 
 // トークン型の宣言
-%token IF ELSE FOR
+%token IF ELSE RETURN
 %token <int_val>      INT
 %token <double_val>   DOUBLE
 %token <char_val>     CHAR
-%token <identifier>   IDENTIFIER
+%token <string>       IDENTIFIER
 
 // 非終端記号の宣言
-%type block stmt_list stmt if_stmt func_decl func_args_decl var_decl call_args ident expr factor
+%type <block> block;
+%type <stmt_list> stmt_list;
+%type <stmt> stmt;
+%type func_decl_list;
+%type <func_decl> func_decl;
+%type <var_list> func_args_decl;
+%type func_defi_list;
+%type <func_defi> func_defi;
+%type <var_decl> var_decl;
+%type <expr_list> call_args;
+%type <string> ident;
+%type <expr> expr factor;
 
 // 結合性と優先順位の指定
 %left '+' '-'
@@ -44,10 +70,17 @@ void yyerror(const char* s);
 
 // 宣言時に使える型はintのみ
 // 数値としてはint double charが使える
-program :               { $$ = $1; }
-        | func_decl     {}
-        | func_defi     {}
+program : func_decl_list func_defi_list {}
         ;
+
+func_decl_list :                          {}
+               | func_decl                {}
+               | func_decl_list func_decl {}
+               ;
+
+func_defi_list : func_defi                {}
+               | func_defi_list func_defi {}
+               ;
 
 block : '{' stmt_list '}' {}
       ;
@@ -57,8 +90,9 @@ stmt_list : stmt            {}
           ;
 
 stmt : var_decl             {}
-     | expr                 { $$ = $1; }
-     | if_stmt              {}
+     | expr                 {}
+   /*| if_stmt              {}*/
+     | return               {}
      ;
 
 func_decl : "int" ident '(' func_args_decl ')' {}
@@ -79,6 +113,9 @@ if_stmt : IF '(' expr ')' block             {}
         | IF '(' expr ')' block ELSE block  {}
         ;
 
+return : RETURN expr  {}
+       ;
+
 call_args :                     {}
           | expr                {}
           | call_args ',' expr  {}
@@ -94,11 +131,12 @@ expr : factor                   { $$ = $1; }
      | expr '-' expr            { $$ = $1 - $3; }
      | expr '*' expr            {}
      | expr '/' expr            {}
+     | ident                    {}
      ;
 
 factor : INT            { $$ = $1; }
-       | DOUBLE         { $$ = (double)$1; }
-       | CHAR           { $$ = (char)$1; }
+       | DOUBLE         { $$ = $1; }
+       | CHAR           { $$ = $1; }
        | '(' expr ')'   { $$ = $2; }
        ;
 

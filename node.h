@@ -1,11 +1,15 @@
 #include <iostream>
 #include <vector>
 
+#Define BASEID
+
 // Nodeの種類一覧
 enum NodeID{
   BaseID,
   VariableID,
   VariableDeclID,
+  StatementID,
+  ExpressionID,
   IntegerID,
   DoubleID,
   CharID,
@@ -18,18 +22,57 @@ enum NodeID{
 // 基底クラス
 class Node{
   // Nodeの種類
-  NodeID ID;
+  NodeID ID = BaseID;
 
   public:
+  Node(){}
   Node(NodeID id):ID(id){}
+  virtual ~Node(){}
   NodeID get_NodeID() const {return ID;}
 };
 
-//class node_Statement : public Node{
-//};
+class node_Statement : public Node{
+  public:
+    node_Statement(){}
+    ~node_Statement(){}
+};
 
-//class node_Expression : public Node{
-//};
+class node_Expression : public Statement{
+  public:
+    node_Expression(){}
+    ~node_Expression(){}
+};
+
+class node_Program{
+  // 関数宣言の集合
+  std::vector<node_Function_Declaration*> Function_Decl_List;
+  // 関数定義の集合
+  std::vector<node_Function*> Function_List;
+
+  public:
+    node_Program(){}
+    ~node_Program(){}
+
+    // Programノードが空かどうか
+    bool is_empty();
+
+    // i番目のプロトタイプ宣言を取り出す
+    node_Function_Declaration* get_Prototype(int i){
+      if(i < Function_Decl_List.size())
+        return Function_Dcl_List.at(i);
+      else
+        return NULL;
+    }
+
+    // i番目の関数を取り出す
+    node_Function* get_Function(int i){
+      if(i < Function_List.size())
+        return Function_List>at(i);
+      else
+        return NULL;
+    }
+
+};
 
 // 関数
 class node_Function{
@@ -44,7 +87,7 @@ class node_Function{
     ~node_Function(){}
 
     // この関数の名前を取り出す
-    std:string get_FuncName(){return Prototype->getName();}
+    std::string get_FuncName(){return Prototype->getName();}
     // この関数のプロトタイプ宣言を取り出す
     node_Function_Declaration* get_Prototype(){return Prototype;}
     // この関数のブロック部分を取り出す
@@ -109,7 +152,7 @@ class node_Block {
 };
 
 // 変数宣言
-class node_Variable_Declaration : public Node{
+class node_Variable_Declaration : public Statement{
   // 宣言の種類（関数内 or 引数部分)
   public:
     typdef enum{
@@ -135,12 +178,12 @@ class node_Variable_Declaration : public Node{
 };
 
 // if else文
-//class node_IF_Statement{
+//class node_IF_Statement : public Statement{
 
 //};
 
 // return文
-class node_Return : public Node{
+class node_Return : public Statement{
   //戻り値となるexpr
   Node *Expr;
 
@@ -152,7 +195,7 @@ class node_Return : public Node{
 };
 
 // 二項演算子
-class node_Binary_Operator : public Node{
+class node_Binary_Operator : public Expression{
   // 二項演算子
   std::string Op;
   // 右辺
@@ -171,7 +214,7 @@ class node_Binary_Operator : public Node{
 };
 
 // 変数参照
-class node_Variable : public Node{
+class node_Variable : public Expression{
   // 変数の名前
   std::string Name;
 
@@ -183,7 +226,7 @@ class node_Variable : public Node{
 };
 
 // Int型の数値
-class node_Integer : public Node{
+class node_Integer : public Expresion{
   // 数値
   int Val;
 
@@ -195,7 +238,7 @@ class node_Integer : public Node{
 };
 
 // Double型の数値
-class node_Double : public Node{
+class node_Double : public Expression{
   // 数値
   double Val;
 
@@ -207,7 +250,7 @@ class node_Double : public Node{
 };
 
 // Char型の数値
-class node_Char : public Node{
+class node_Char : public Expression{
   // 数値
   char Val;
 
@@ -219,7 +262,7 @@ class node_Char : public Node{
 };
 
 // 関数呼び出し
-class node_Function_Call : public Node{
+class node_Function_Call : public Expression{
   // 呼び出される関数の名前
   std::string Callee;
   // 関数呼び出しの引数
