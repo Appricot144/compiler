@@ -5,7 +5,7 @@ node_Program *Program;  //rootノード 最終的なAST
 
 // extern Table Symbol_table     //仮で記号表を宣言しておく 後で直されたし
 extern int yylex();
-void yyerror(const char* s);
+void yyerror(const char* msg){fprintf(stderr, "Parser : %s", msg);}
 %}
 
 
@@ -31,6 +31,9 @@ void yyerror(const char* s);
   std::vector<node_Expression*>   *expr_list;
   std::vector<node_Variable*>     *var_list;
   std::string   *string;
+  int int;
+  double double;
+  char char;
 }
 
 // トークン型の宣言
@@ -141,20 +144,3 @@ factor : INT            { $$ = $1; }
        ;
 
 %%
-
-
-/* C の追加コード */
-int main(void){
-
-  if(yyparse() == 0)
-    printf("Parse : success \n");
-  else
-    printf("Parse : fail \n");
-
-  return 0;
-}
-
-int yyerror(char *msg){
-  fprintf(stderr, "Parser : %s", msg);
-  return 0;
-}
