@@ -3,6 +3,13 @@
 #include "node.h"
 #include "parser.hpp"
 
+extern "C" int yywrap() { }
+
+
+// integerはint型の数値を返す
+// floatingはdouble型の数値を返す
+// charactorはchar型の1文字を返す
+// identifierはstring型の文字列を返す
 %}
 
 space       [ \t\n]
@@ -15,20 +22,16 @@ other       .
 
 %%
 
-// integerはint型の数値を返す
-// floatingはdouble型の数値を返す
-// charactorはchar型の1文字を返す
-// identifierはstring型の文字列を返す
+^if            { return(IF); }
+^else          { return(ELSE); }
+^return        { return(RETURN); }
 {space}+      ;
 {symbol}      { return(yytext[0]); }
-{integer}     { yylval.int = std::atoi(yytext); return INT; }
-{floating}    { yylval.double = std::atof(yytext); return DOUBLE; }
-{charactor}   { yylval.char = yytext[1]; return CHAR; }
-{identifier}  { yylval.string = new std::string(yytext, yyleng); return IDENTFIER; }
+{integer}     { yylval.t_int = std::atoi(yytext); return INT; }
+{floating}    { yylval.t_double = std::atof(yytext); return DOUBLE; }
+{charactor}   { yylval.t_char = yytext[1]; return CHAR; }
+{identifier}  { yylval.string = new std::string(yytext, yyleng); return IDENTIFIER; }
 ";"           ;
-if            { return(IF); }
-else          { return(ELSE); }
-return        { return(RETURN); }
 {other}       { fprintf(stderr, "Unknown token : %c\n", yytext[0]); }
 
 %%

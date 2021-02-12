@@ -30,10 +30,12 @@ void yyerror(const char* msg){fprintf(stderr, "Parser : %s", msg);}
   std::vector<node_Statement*>    *stmt_list;
   std::vector<node_Expression*>   *expr_list;
   std::vector<node_Variable*>     *var_list;
+  std::vector<node_Function_Declaration*>  *func_decl_list;
+  std::vector<node_Function*>     *func_defi_list;
   std::string   *string;
-  int int;
-  double double;
-  char char;
+  int t_int;
+  double t_double;
+  char t_char;
 }
 
 // トークン型の宣言
@@ -47,10 +49,10 @@ void yyerror(const char* msg){fprintf(stderr, "Parser : %s", msg);}
 %type <block> block;
 %type <stmt_list> stmt_list;
 %type <stmt> stmt;
-%type func_decl_list;
+%type <func_decl_list> func_decl_list;
 %type <func_decl> func_decl;
 %type <var_list> func_args_decl;
-%type func_defi_list;
+%type <func_defi_list> func_defi_list;
 %type <func_defi> func_defi;
 %type <var_decl> var_decl;
 %type <expr_list> call_args;
@@ -74,10 +76,10 @@ void yyerror(const char* msg){fprintf(stderr, "Parser : %s", msg);}
 // 宣言時に使える型はintのみ
 // 数値としてはint double charが使える
 program : func_decl_list func_defi_list {}
+        | func_defi_list                {}
         ;
 
-func_decl_list :                          {}
-               | func_decl                {}
+func_decl_list : func_decl                {}
                | func_decl_list func_decl {}
                ;
 
@@ -112,9 +114,9 @@ func_args_decl :                              {}
 var_decl : "int" ident  {}
          ;
 
-if_stmt : IF '(' expr ')' block             {}
-        | IF '(' expr ')' block ELSE block  {}
-        ;
+//if_stmt : IF '(' expr ')' block             {}
+//        | IF '(' expr ')' block ELSE block  {}
+//        ;
 
 return : RETURN expr  {}
        ;
@@ -129,9 +131,9 @@ ident : IDENTIFIER  {}
 
 expr : factor                   { $$ = $1; }
      | ident '(' call_args ')'  {}
-     | ident '=' expr           { $$ =  }
-     | expr '+' expr            { $$ = $1 + $3; }
-     | expr '-' expr            { $$ = $1 - $3; }
+     | ident '=' expr           {}
+     | expr '+' expr            {}
+     | expr '-' expr            {}
      | expr '*' expr            {}
      | expr '/' expr            {}
      | ident                    {}
