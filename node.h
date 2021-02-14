@@ -48,12 +48,15 @@ class node_Expression : public node_Statement{
 
 class node_Program{
   // 関数宣言の集合
-  std::vector<node_Function_Declaration*> Function_Decl_List;
+  std::vector<node_Function_Declaration*> *Function_Decl_List;
   // 関数定義の集合
-  std::vector<node_Function*> Function_List;
+  std::vector<node_Function*> *Function_List;
 
   public:
-    node_Program(){}
+    node_Program(std::vector<node_Function*> *func_list)
+    : Function_List(func_list){}
+    node_Program(std::vector<node_Function_Declaration*> *func_decl_list, std::vector<node_Function*> *func_list)
+    : Function_Decl_List(func_decl_list), Function_List(func_list){}
     ~node_Program(){}
 
     // Programノードが空かどうか
@@ -61,16 +64,16 @@ class node_Program{
 
     // i番目のプロトタイプ宣言を取り出す
     node_Function_Declaration* get_Prototype(int i){
-      if(i < Function_Decl_List.size())
-        return Function_Decl_List.at(i);
+      if(i < Function_Decl_List->size())
+        return Function_Decl_List->at(i);
       else
         return NULL;
     }
 
     // i番目の関数を取り出す
     node_Function* get_Function(int i){
-      if(i < Function_List.size())
-        return Function_List.at(i);
+      if(i < Function_List->size())
+        return Function_List->at(i);
       else
         return NULL;
     }
@@ -80,25 +83,30 @@ class node_Program{
 // 関数宣言　プロトタイプ宣言
 class node_Function_Declaration{
   // 関数の名前
-  std::string Name;
+  std::string *Name;
   // 引数の名前
-  std::vector<std::string> Params;
+  std::vector<node_Variable_Declaration*> *Params;
 
   public:
-    node_Function_Declaration(const std::string &name, std::vector<std::string> &params)
+    node_Function_Declaration(std::string *name, std::vector<node_Variable_Declaration*> *params)
     : Name(name), Params(params){}
+    node_Function_Declaration(std::string *name)
+    : Name(name){}
     ~node_Function_Declaration(){}
 
-    std::string get_Name(){return Name;}
+    std::string get_Name(){
+      std::string c_name = *Name;
+      return c_name;
+    }
     // i番目の引数の名前を取り出す
-    std::string get_Param(int i){
-      if(i < Params.size())
-        return Params.at(i);
+    node_Variable_Declaration* get_Param(int i){
+      if(i < Params->size())
+        return Params->at(i);
       else
         return NULL;
     }
     // 引数の数を取り出す
-    int get_Params_Size(){return Params.size();}
+    int get_Params_Size(){return Params->size();}
 };
 
 // 変数宣言
@@ -112,16 +120,19 @@ class node_Variable_Declaration : public node_Statement{
 
   private:
     // 変数の名前
-    std::string Name;
+    std::string *Name;
     // 宣言の種類
     DeclType Type;
 
   public:
-    node_Variable_Declaration(const std::string &name)
+    node_Variable_Declaration(std::string *name)
     : node_Statement(VariableDeclID), Name(name){}
     ~node_Variable_Declaration(){}
 
-    std::string get_Name(){return Name;}
+    std::string get_Name(){
+      std::string c_name = *Name;
+      return c_name;
+    }
     DeclType get_Type(){return Type;}
 
     bool set_Type(DeclType type){Type = type; return true;}
@@ -131,31 +142,32 @@ class node_Variable_Declaration : public node_Statement{
 // 関数やIF文などの｛｝で囲まれた部分 : Statementの集合
 class node_Block {
   // Statementの集合
-  std::vector<node_Statement*> Statement_List;
+  std::vector<node_Statement*> *Statement_List;
   // 変数定義の集合
   // 変数定義のノードはここに入れる
-  std::vector<node_Variable_Declaration*> Variable_Decl_List;
+  std::vector<node_Variable_Declaration*> *Variable_Decl_List;
 
   public:
-    node_Block(){}
+    node_Block(std::vector<node_Statement*> *stmt_list)
+    : Statement_List(stmt_list) {}
     ~node_Block(){}
 
     // Statement_ListにNodeを追加する
-    bool add_Statement(node_Statement *stmt){Statement_List.push_back(stmt);}
+    bool add_Statement(node_Statement *stmt){Statement_List->push_back(stmt);}
     // Variable_Decl_Listに変数定義のNodeを追加する
     bool add_Variable_Decl(node_Variable_Declaration *vdecl){}
 
     // Statement_Listからi番目の要素を取り出す
     Node* get_Statement(int i){
-      if(i < Statement_List.size())
-        return Statement_List.at(i);
+      if(i < Statement_List->size())
+        return Statement_List->at(i);
       else
         return NULL;
     }
     // Variable_Decl_Listからi番目の要素を取り出す
     Node* get_Variable_Decl(int i){
-      if(i < Variable_Decl_List.size())
-        return Variable_Decl_List.at(i);
+      if(i < Variable_Decl_List->size())
+        return Variable_Decl_List->at(i);
       else
         return NULL;
     }
@@ -189,10 +201,10 @@ class node_Function{
 // return文
 class node_Return : public node_Statement{
   //戻り値となるexpr
-  Node *Expr;
+  node_Expression *Expr;
 
   public:
-    node_Return(Node *expr) : node_Statement(ReturnID), Expr(expr) {}
+    node_Return(node_Expression *expr) : node_Statement(ReturnID), Expr(expr) {}
     ~node_Return(){}
 
     Node* get_Expr(){return Expr;}
@@ -201,18 +213,18 @@ class node_Return : public node_Statement{
 // 二項演算子
 class node_Binary_Operator : public node_Expression{
   // 二項演算子
-  std::string Op;
+  char Op;
   // 右辺
   node_Expression *RHS;
   // 左辺
   node_Expression *LHS;
 
   public:
-    node_Binary_Operator(std::string op, node_Expression *rhs, node_Expression *lhs)
+    node_Binary_Operator(char op, node_Expression *lhs, node_Expression *rhs)
     : node_Expression(BinaryOpID), Op(op), RHS(rhs), LHS(lhs) {}
     ~node_Binary_Operator(){}
 
-    std::string get_Op(){return Op;}
+    char get_Op(){return Op;}
     Node* get_RHS(){return RHS;}
     Node* get_LHS(){return LHS;}
 };
@@ -224,7 +236,7 @@ class node_Variable : public node_Expression{
 
   public:
     node_Variable(const std::string &name) : node_Expression(VariableID), Name(name){}
-    ~node_Variable();
+    ~node_Variable(){}
 
     std::string get_Name(){return Name;}
 };
@@ -268,15 +280,21 @@ class node_Char : public node_Expression{
 // 関数呼び出し
 class node_Function_Call : public node_Expression {
   // 呼び出される関数の名前
-  std::string Callee;
+  std::string *Callee;
   // 関数呼び出しの引数
-  std::vector<Node*> Args;
+  std::vector<node_Expression*> *Args;
 
   public:
-    node_Function_Call(const std::string &callee, std::vector<Node*> &args)
+    node_Function_Call(std::string *callee, std::vector<node_Expression*> *args)
      : node_Expression(FuncCallID), Callee(callee), Args(args){}
-    ~node_Function_Call();
+    ~node_Function_Call(){}
 
-    std::string get_Callee(){return Callee;}
-    std::vector<Node*> get_Args(){return Args;}
+    std::string get_Callee(){
+      std::string c_Callee = *Callee;
+      return c_Callee;
+    }
+    std::vector<node_Expression*> get_Args(){
+      std::vector<node_Expression*> c_Args = *Args;
+      return c_Args;
+    }
 };

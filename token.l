@@ -10,6 +10,7 @@ extern "C" int yywrap() { }
 // floatingはdouble型の数値を返す
 // charactorはchar型の1文字を返す
 // identifierはstring型の文字列を返す
+// 二項演算子はstring型の文字を返す
 %}
 
 space       [ \t\n]
@@ -22,11 +23,11 @@ other       .
 
 %%
 
-^if            { return(IF); }
-^else          { return(ELSE); }
-^return        { return(RETURN); }
+^if            { return IF; }
+^else          { return ELSE; }
+^return        { return RETURN; }
 {space}+      ;
-{symbol}      { return(yytext[0]); }
+{symbol}      { return yytext[0]; }
 {integer}     { yylval.t_int = std::atoi(yytext); return INT; }
 {floating}    { yylval.t_double = std::atof(yytext); return DOUBLE; }
 {charactor}   { yylval.t_char = yytext[1]; return CHAR; }

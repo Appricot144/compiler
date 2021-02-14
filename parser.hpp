@@ -63,6 +63,7 @@ union YYSTYPE
 #line 15 "parser.y" /* yacc.c:1909  */
 
   Node          *node;
+  node_Program  *program;
   node_Function *func_defi;
   node_Function_Declaration *func_decl;
   node_Block    *block;
@@ -78,7 +79,7 @@ union YYSTYPE
   node_Return           *ret;
   std::vector<node_Statement*>    *stmt_list;
   std::vector<node_Expression*>   *expr_list;
-  std::vector<node_Variable*>     *var_list;
+  std::vector<node_Variable_Declaration*>  *var_decl_list;
   std::vector<node_Function_Declaration*>  *func_decl_list;
   std::vector<node_Function*>     *func_defi_list;
   std::string   *string;
@@ -86,7 +87,7 @@ union YYSTYPE
   double t_double;
   char t_char;
 
-#line 90 "parser.hpp" /* yacc.c:1909  */
+#line 91 "parser.hpp" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
