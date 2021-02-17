@@ -1,3 +1,6 @@
+#ifndef ___NODE_H
+#define ___NODE_H
+
 #include <iostream>
 #include <vector>
 
@@ -5,6 +8,9 @@ class node_Function;
 class node_Function_Declaration;
 class node_Block;
 class node_Variable_Declaration;
+
+#define SAFE_DELETE(x) {delete x; x=NULL;}
+#define SAFE_DELETEA(x) {delete[] x; x=NULL;}
 
 // Nodeの種類一覧
 enum NodeID{
@@ -129,6 +135,12 @@ class node_Variable_Declaration : public node_Statement{
     : node_Statement(VariableDeclID), Name(name){}
     ~node_Variable_Declaration(){}
 
+    static inline bool classof(node_Variable_Declaration const*){return true;}
+    //渡されたStatementノードがVariableDecIDか判定する
+    static inline bool classof(node_Statement const *base){
+      return base->get_NodeID()==VariableDecID;
+    }
+
     std::string get_Name(){
       std::string c_name = *Name;
       return c_name;
@@ -207,6 +219,12 @@ class node_Return : public node_Statement{
     node_Return(node_Expression *expr) : node_Statement(ReturnID), Expr(expr) {}
     ~node_Return(){}
 
+    static inline bool classof(node_Return const*){return true;}
+    //渡されたStatementノードがReturnIDか判定する
+    static inline bool classof(node_Statement const* base){
+      return base->get_NodeID()==ReturnID;
+    }
+
     Node* get_Expr(){return Expr;}
 };
 
@@ -224,6 +242,12 @@ class node_Binary_Operator : public node_Expression{
     : node_Expression(BinaryOpID), Op(op), RHS(rhs), LHS(lhs) {}
     ~node_Binary_Operator(){}
 
+    static inline bool classof(node_Binary_Operator const*){return true;}
+    //渡されたStatementノードがBinaryOpIDか判定する
+    static inline bool classof(node_Binary_Operator const* base){
+      return base->get_NodeID()==BinaryOpID;
+    }
+
     char get_Op(){return Op;}
     Node* get_RHS(){return RHS;}
     Node* get_LHS(){return LHS;}
@@ -238,6 +262,12 @@ class node_Variable : public node_Expression{
     node_Variable(const std::string &name) : node_Expression(VariableID), Name(name){}
     ~node_Variable(){}
 
+    static inline bool classof(node_Variable const*){return true;}
+    //渡されたExpressionノードがVariableIDか判定する
+    static inline bool classof(node_Expression const* base){
+      return base->get_NodeID()==VariableID;
+    }
+
     std::string get_Name(){return Name;}
 };
 
@@ -249,6 +279,12 @@ class node_Integer : public node_Expression{
   public:
     node_Integer(int val) : node_Expression(IntegerID), Val(val){}
     ~node_Integer();
+
+    static inline bool classof(node_Integer const*){return true;}
+    //渡されたExpressionノードがIntegerIDか判定する
+    static inline bool classof(node_Expression const* base){
+      return base->get_NodeID()==IntegerID;
+    }
 
     int get_Val(){return Val;}
 };
@@ -262,6 +298,12 @@ class node_Double : public node_Expression{
     node_Double(double val) : node_Expression(DoubleID), Val(val){}
     ~node_Double();
 
+    static inline bool classof(node_Double const*){return true;}
+    //渡されたExpressionノードがDoubleIDか判定する
+    static inline bool classof(node_Expression const* base){
+      return base->get_NodeID()==DoubleID;
+    }
+
     int get_Val(){return Val;}
 };
 
@@ -273,6 +315,12 @@ class node_Char : public node_Expression{
   public:
     node_Char(char val) : node_Expression(CharID), Val(val){}
     ~node_Char();
+
+    static inline bool classof(node_Char const*){return true;}
+    //渡されたExpressionノードがIntegerIDか判定する
+    static inline bool classof(node_Expression const* base){
+      return base->get_NodeID()==CharID;
+    }
 
     int get_Val(){return Val;}
 };
@@ -289,6 +337,12 @@ class node_Function_Call : public node_Expression {
      : node_Expression(FuncCallID), Callee(callee), Args(args){}
     ~node_Function_Call(){}
 
+    static inline bool classof(node_Function_Call const*){return true;}
+    //渡されたStatementノードがFuncCallIDか判定する
+    static inline bool classof(node_Statement const* base){
+      return base->get_NodeID()==FuncCallID;
+    }
+
     std::string get_Callee(){
       std::string c_Callee = *Callee;
       return c_Callee;
@@ -298,3 +352,5 @@ class node_Function_Call : public node_Expression {
       return c_Args;
     }
 };
+
+#endif

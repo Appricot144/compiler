@@ -1,5 +1,6 @@
 %{
 /* C の宣言部 */
+#include "node.h"
 #include "Symbol_Table.h"
 node_Program *Program;      //rootノード 最終的なAST
 variable_Table var_Table;  //変数の記号表
@@ -138,7 +139,7 @@ ident : IDENTIFIER  { $$ = $1; }
 expr : factor                   { $$ = $1; }
      | ident '(' call_args ')'  { $$ = new node_Function_Call($1, $3); }
      | ident '=' expr           { $$ = new node_Binary_Operator($<t_char>2, var_Table.get_Tuple(*$1), $3); }
-     | expr '+' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }//変数の記号表を探して、変数定義されているならそのインスタンスを返す。ないなら未定義の参照エラー
+     | expr '+' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
      | expr '-' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
      | expr '*' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
      | expr '/' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }

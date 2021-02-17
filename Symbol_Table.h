@@ -1,6 +1,7 @@
 #include"node.h"
 // 識別子の名前の衝突を探す
 
+//変数の記号表
 class variable_Table{
   // 記号表
   std::vector<node_Variable*> Table;
@@ -39,4 +40,9 @@ class variable_Table{
       node_Variable *tmp = new node_Variable(nullptr);
       return tmp;
     }
+};
+
+// 関数の記号表
+class function_Table{
+  
 };
