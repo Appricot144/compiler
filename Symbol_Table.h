@@ -43,6 +43,6 @@ class variable_Table{
 };
 
 // 関数の記号表
-class function_Table{
-  
-};
+//class function_Table{
+
+//};

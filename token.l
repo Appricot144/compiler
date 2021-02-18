@@ -1,10 +1,8 @@
 %{
 #include <string>
-#include "node.h"
 #include "parser.hpp"
 
 extern "C" int yywrap() { }
-
 
 // integerはint型の数値を返す
 // floatingはdouble型の数値を返す
@@ -23,9 +21,9 @@ other       .
 
 %%
 
-^if            { return IF; }
-^else          { return ELSE; }
-^return        { return RETURN; }
+^if           { return IF; }
+^else         { return ELSE; }
+^return       { return RETURN; }
 {space}+      ;
 {symbol}      { return yytext[0]; }
 {integer}     { yylval.t_int = std::atoi(yytext); return INT; }

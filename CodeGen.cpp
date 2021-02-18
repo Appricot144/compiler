@@ -1,6 +1,5 @@
 #include "node.h"
 #include "CodeGen.h"
-#include "parser.hpp"
 
 // コンストラクタ
 CodeGen::CodeGen(){
@@ -108,25 +107,65 @@ Function* CodeGen::generate_Function(node_Function *func_node, Module *mod){
     return NULL;
   }
   Current_Func = func;
+  BasicBlock *bblock = BasicBlock::Create(getGlobalContext(), "entry", func);
+  Builder->SetInsertPoint(bblock);
+  //Functionのボディを生成する
+  generate_Block(func_node->get_FuncBlock());
+
+  return func;
 }
 
 //ブロックの生成メソッド
+// param  : node_Block
+// return : 最後に生成したValueのポインタ
+//変数宣言のみブロックの前半に固めて命令を生成する
+//ブロック内のStatementノードを探索し、各種命令生成メソッドを呼び出す。
 Value* CodeGen::generate_Block(node_Block *block){
 
+  node_Variable_Declaration v_decl;
+  Value *v = NULL;
+
+  //Variable Declaration
+  node_Statement *stmt;
+  for(int i=0; ; i++){
+    stmt = block->get_Statement(i);
+    if(!stmt){
+      break;
+    }
+
+    if( stmt->get_NodeID()==VariableDeclID ){
+      //create allocate
+      v_decl = dyn_cast<node_Variable_Declaration>(stmt);
+      v=generate_Variable_Declaration(v_decl);
+    }
+
+  }
+
+  //other Statement
+  for(int i=0; ; i++){
+    stmt = block->get_Statement(i);
+    if(!stmt){
+      break;
+    }
+
+    v = generate_Statement(stmt);
+  }
+
+  return v;
 }
 
 //変数宣言生成メソッド（alloca命令）
-// param  : node_Variable_Decralation (変数宣言ノード)
+// param  : node_Variable_Declaration (変数宣言ノード)
 // return : 生成したValueのポインタ
 //alloca命令を生成しする．argsだった時は引数の値を格納する．
-Value *Codegen::generate_Variable_Declaration(node_Variable_Decralation *v_decl){
+Value *Codegen::generate_Variable_Declaration(node_Variable_Declaration *v_decl){
   //create allocate
-  AllocaInt *alloca = Builder->CreateAlloca(Type::getInt32ty(getGlobalContext()),
+  AllocaInt *alloca = Builder->CreateAlloca(Type::getInt32Ty(getGlobalContext()),
                                             0,
                                             v_decl->get_Name());
 
   //if args allocate
-  if(v_decl->get_Type() == node_Variable_Decralation::param){
+  if(v_decl->get_Type() == node_Variable_Declaration::param){
     //store args
     ValueSymbolTable &vs_table = Current_Func->getValueSymbolTable();
     Builder->CreateStore(vs_table.lookup(v_decl->get_Name()), alloca);
@@ -135,20 +174,17 @@ Value *Codegen::generate_Variable_Declaration(node_Variable_Decralation *v_decl)
   return alloca;
 }
 
-
 //Statement生成メソッド
 // param  : node_Statement
 // return : 生成したValueのポインタ
 //引数として与えられたStatementノードの種類を判別して，
 //各種コード生成メソッドを呼び出す．
 Value *CodeGen::generate_Statement(node_Statement *stmt){
-  if(isa<node_Binary_Expression>(stmt)){
-    return generate_Binary_Expression(dyn_cast<node_Binary_Expression>(stmt));
-  }else if(isa<node_Function_Call>(stmt)){
+  if(isa<node_Function_Call>(stmt)){
     return generate_Function_Call(dyn_cast<node_Function_Call>(stmt));
   }else if(isa<node_Return>(stmt)){
     return generate_Return(dyn_cast<node_Return>(stmt));
-  }else if(isa<generate_Expression>){
+  }else if(isa<generate_Expression>(stmt)){
     return generate_Expression(dyn_cast<node_Expression>(stmt));
   }else{
     return NULL;
@@ -156,6 +192,173 @@ Value *CodeGen::generate_Statement(node_Statement *stmt){
 }
 
 //二項演算生成メソッド
-// param  :
-// return :
+// param  : node_Binary_Operator(二項演算子ノード)
+// return : 生成したValueのポインタ
 //
+Value *CodeGen::generate_Binary_Expression(node_Binary_Operator *bin_expr){
+  node_Expression *lhs = bin_expr->get_LHS();
+  node_Expression *rhs = bin_expr->get_RHS();
+  Value *lhs_v;
+  Value *rhs_v;
+
+  //assignment
+  if(bin_expr->getOp() == '='){
+    //lhs is variable
+    node_Variable *lhs_var = dyn_cast<node_Variable>(lhs);
+    ValueSymbolTable &vs_table = Current_Func->getValueSymbolTable();
+    lhs_v = vs_table.lookup(lhs_var->get_Name());
+
+  //other oeprand
+  }else{
+    //lhs is ?
+      //binary?
+    if(isa<node_Binary_Operator>(lhs)){
+      lhs_v = generate_Binary_Expression(dyn_cast<node_Binary_Operator>(lhs));
+
+      //Variable?
+    }else if(isa<node_Variable>(lhs)){
+      lhs_v = generete_Variable(dyn_cast<node_Variable>(lhs));
+
+      //Integer?
+    }else if(isa<node_Integer>(lhs)){
+      node_Integer *val = dyn_cast<node_Integer>(lhs);
+      lhs_v = generate_Integer(val->get_Val());
+    }
+
+  }
+
+  // create rhs value
+    //binary?
+  if(isa<node_Binary_Operator>(rhs)){
+    rhs_v = generate_Binary_Expression(dyn_cast<node_Binary_Operator>(rhs));
+
+    //Variable?
+  }else if(isa<node_Variable>(rhs)){
+    rhs_v = generate_Variable(dyn_cast<node_Variable>(rhs));
+
+    //Funcion call?
+  }else if(isa<node_Function_Call>(rhs)){
+    rhs_v = generate_Function_Call(dyn_cast<node_Function_Call>(rhs));
+
+    //Integer?
+  }else if(isa<node_Integer>(rhs)){
+    node_Integer *val = dyn_cast<node_Integer>(rhs);
+    rhs_v = generate_Integer(val->get_Val());
+  }
+
+  if(bin_expr->getOp() == '='){
+    //store
+    return Builder->CreateStore(rhs_v, lhs_v);
+  }else if(bin_expr->getOp() == '+' ){
+    //add
+    return Builder->CreateAdd(lhs_v, rhs_v, "add_tmp");
+  }else if(bin_expr->getOp() == '-'){
+    //sub
+    return Builder->CreateSub(lhs_v, rhs_v, "sub_tmp");
+  }else if(bin_expr->getOp() == '*'){
+    //mul
+    return Builder->CreateMul(lhs_v, rhs_v, "mul_tmp");
+  }else if(bin_expr->getOp() == '/'){
+    //div
+    return Builder->CreateSDiv(lhs_v, rhs_v, "div_tmp");
+  }
+}
+
+
+//関数呼び出し生成メソッド(Call命令)
+// params : node_Function_Call(関数呼びだしノード)
+// return : 生成したValueのポインタ
+//
+Value *CodeGen::generate_Function_Call(node_Function_Call *func_call){
+  std::vector<Value*> arg_vec; //args
+  node_Expression *arg;
+  Velue *arg_v;
+  ValueSymbolTable &vs_table = Current_Func->getValueSymbolTable();
+
+  //args
+  for(int i=0; ; i++){
+    if(!(arg=func_call->get_Args(i))){
+      break;
+    }
+
+      //is Call
+    if(isa<node_Function_Call>(arg)){
+      arg_v = generate_Function_Call(dyn_cast<node_Function_Call>(arg));
+
+      //is Binary Expression
+    }else if(isa<node_Binary_Operator>(arg)){
+      arg_v = generate_Binary_Expression(dyn_cast<node_Binary_Operator>(arg));
+      node_Binary_Operator *bin_expr = dyn_cast<node_Binary_Operator>(arg);
+      if(bin_expr->getOp() == '='){ //代入演算の時は、store命令ではなくload命令を出力する
+        node_Variable *var = dyn_cast<node_Variable>(bin_expr->get_LHS());
+        arg_v = Builder->CreateLoad(vs_table.lookup(var->get_Name()), "arg_val");
+      }
+
+      //is Variable
+    }else if(isa<node_Variable>(arg)){
+      arg_v = generate_Variable(dyn_cast<node_Variable>(arg));
+
+      //is Integer
+    }else if(isa<node_Integer>(arg)){
+      node_Integer *val = dyn_cast<node_Integer>(arg);
+      arg_v = generate_Integer(val->get_Val());
+
+    }
+    arg_vec.push_back(arg_v);
+  }
+
+  //create function call
+  return Builder->CreateCall(Mod->getFunction(func_call->get_Callee()),
+                             arg_vec,
+                             "call_tmp");
+}
+
+//Return生成メソッド
+// params : node_Return
+// return : 生成したValueのポインタ
+Value *CodeGen::generate_Return(node_Return *ret){
+  node_Expression *expr = ret->get_Expr();
+  Value *ret_v;
+
+    //Expr ?
+    //is Binary Expression
+  if(isa<node_Binary_Operator>(expr)){
+    ret_v = generate_Binary_Expression(dyn_cast<node_Binary_Operator>(expr));
+    //is Variable
+  }else if(isa<node_Variable>(expr)){
+    ret_v = generate_Variable(dyn_cast<node_Variable>(expr));
+    //is Integer
+  }else if(isa<node_Integer>(expr)){
+    node_Integer *val = dyn_cast<node_Integer>(expr);
+    ret_v = generate_Integer(val->get_Val());
+  }
+
+  Builder->CreateRet(ret_v);
+}
+
+//Expression生成メソッド
+// params : node_Expression
+// return : 生成したValueのポインタ
+Value *CodeGen::generate_Expression(node_Expression *expr){
+  if(isa<node_Binary_Operator>(expr)){
+    return generate_Binary_Expression(dyn_cast<node_Binary_Operator>(expr));
+  }else if(isa<node_Function_Call>(expr)){
+    return generate_Function_Call(dyn_cast<node_Function_Call>(expr));
+  }else{
+    return NULL;
+}
+
+//変数参照のコード生成メソッド
+// Params : node_Variable
+// return : 生成したValueのポインタ
+Value *CodeGen::generate_Variable(node_Variable *var){
+  ValueSymbolTable &vs_table = Current_Func->getValueSymbolTable();
+  return Builder->CreateLoad(vs_table.lookup(var->get_Name()), "vat_tmp");
+}
+
+//int型定数の生成メソッド
+// Params : int (生成する定数の値)
+// return : 生成したValueのポインタ
+Value *CodeGen::generate_Integer(int value){
+  return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), value);
+}

@@ -1,8 +1,11 @@
 #ifndef ___NODE_H
 #define ___NODE_H
 
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <vector>
+#include<llvm/Support/Casting.h>
 
 class node_Function;
 class node_Function_Declaration;
@@ -66,7 +69,7 @@ class node_Program{
     ~node_Program(){}
 
     // Programノードが空かどうか
-    bool is_empty();
+    bool empty();
 
     // i番目のプロトタイプ宣言を取り出す
     node_Function_Declaration* get_Prototype(int i){
@@ -100,6 +103,7 @@ class node_Function_Declaration{
     : Name(name){}
     ~node_Function_Declaration(){}
 
+    // 関数名を取得する
     std::string get_Name(){
       std::string c_name = *Name;
       return c_name;
@@ -136,9 +140,9 @@ class node_Variable_Declaration : public node_Statement{
     ~node_Variable_Declaration(){}
 
     static inline bool classof(node_Variable_Declaration const*){return true;}
-    //渡されたStatementノードがVariableDecIDか判定する
+    //渡されたStatementノードがVariableDeclIDか判定する
     static inline bool classof(node_Statement const *base){
-      return base->get_NodeID()==VariableDecID;
+      return base->get_NodeID()==VariableDeclID;
     }
 
     std::string get_Name(){
@@ -157,7 +161,7 @@ class node_Block {
   std::vector<node_Statement*> *Statement_List;
   // 変数定義の集合
   // 変数定義のノードはここに入れる
-  std::vector<node_Variable_Declaration*> *Variable_Decl_List;
+  // std::vector<node_Variable_Declaration*> *Variable_Decl_List;
 
   public:
     node_Block(std::vector<node_Statement*> *stmt_list)
@@ -167,22 +171,22 @@ class node_Block {
     // Statement_ListにNodeを追加する
     bool add_Statement(node_Statement *stmt){Statement_List->push_back(stmt);}
     // Variable_Decl_Listに変数定義のNodeを追加する
-    bool add_Variable_Decl(node_Variable_Declaration *vdecl){}
+    //bool add_Variable_Decl(node_Variable_Declaration *vdecl){}
 
     // Statement_Listからi番目の要素を取り出す
-    Node* get_Statement(int i){
+    node_Statement* get_Statement(int i){
       if(i < Statement_List->size())
         return Statement_List->at(i);
       else
         return NULL;
     }
     // Variable_Decl_Listからi番目の要素を取り出す
-    Node* get_Variable_Decl(int i){
-      if(i < Variable_Decl_List->size())
-        return Variable_Decl_List->at(i);
-      else
-        return NULL;
-    }
+    //Node* get_Variable_Decl(int i){
+    //  if(i < Variable_Decl_List->size())
+    //    return Variable_Decl_List->at(i);
+    //  else
+    //    return NULL;
+    //}
 };
 
 // 関数
@@ -225,7 +229,7 @@ class node_Return : public node_Statement{
       return base->get_NodeID()==ReturnID;
     }
 
-    Node* get_Expr(){return Expr;}
+    node_Expression* get_Expr(){return Expr;}
 };
 
 // 二項演算子
@@ -249,8 +253,8 @@ class node_Binary_Operator : public node_Expression{
     }
 
     char get_Op(){return Op;}
-    Node* get_RHS(){return RHS;}
-    Node* get_LHS(){return LHS;}
+    node_Expression* get_RHS(){return RHS;}
+    node_Expression* get_LHS(){return LHS;}
 };
 
 // 変数参照

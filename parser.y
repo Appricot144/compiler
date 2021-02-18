@@ -5,6 +5,8 @@
 node_Program *Program;      //rootノード 最終的なAST
 variable_Table var_Table;  //変数の記号表
 
+extern char *input_Filename;
+extern FILE *yyin;
 extern int yylex();
 void yyerror(const char* msg){fprintf(stderr, "Parser : %s", msg);}
 %}
@@ -64,6 +66,7 @@ void yyerror(const char* msg){fprintf(stderr, "Parser : %s", msg);}
 %type <ret> return;
 
 // 結合性と優先順位の指定
+%nonassoc '='
 %left '+' '-'
 %left '*' '/'
 
@@ -146,9 +149,9 @@ expr : factor                   { $$ = $1; }
      | ident                    { $$ = new node_Variable(*$1); }
      ;
 
-factor : INT            { $$ = $1; }
-       | DOUBLE         { $$ = $1; }
-       | CHAR           { $$ = $1; }
+factor : INT            { $$ = new node_Integer($1); }
+       | DOUBLE         { $$ = new node_Double($1); }
+       | CHAR           { $$ = new node_Char($1); }
        | '(' expr ')'   { $$ = $2; }
        ;
 
