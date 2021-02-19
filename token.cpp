@@ -461,20 +461,18 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "token.l"
 #line 2 "token.l"
-#include <string>
 #include "node.h"
 #include "parser.hpp"
 
 extern "C" int yywrap() { }
-
 
 // integerはint型の数値を返す
 // floatingはdouble型の数値を返す
 // charactorはchar型の1文字を返す
 // identifierはstring型の文字列を返す
 // 二項演算子はstring型の文字を返す
-#line 477 "token.cpp"
-#line 478 "token.cpp"
+#line 475 "token.cpp"
+#line 476 "token.cpp"
 
 #define INITIAL 0
 
@@ -694,10 +692,10 @@ YY_DECL
 		}
 
 	{
-#line 24 "token.l"
+#line 22 "token.l"
 
 
-#line 701 "token.cpp"
+#line 699 "token.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -757,66 +755,66 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 26 "token.l"
+#line 24 "token.l"
 { return IF; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 27 "token.l"
+#line 25 "token.l"
 { return ELSE; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 28 "token.l"
+#line 26 "token.l"
 { return RETURN; }
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 29 "token.l"
+#line 27 "token.l"
 ;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 30 "token.l"
+#line 28 "token.l"
 { return yytext[0]; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 31 "token.l"
+#line 29 "token.l"
 { yylval.t_int = std::atoi(yytext); return INT; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 32 "token.l"
+#line 30 "token.l"
 { yylval.t_double = std::atof(yytext); return DOUBLE; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 33 "token.l"
+#line 31 "token.l"
 { yylval.t_char = yytext[1]; return CHAR; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 34 "token.l"
+#line 32 "token.l"
 { yylval.string = new std::string(yytext, yyleng); return IDENTIFIER; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 35 "token.l"
+#line 33 "token.l"
 ;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 36 "token.l"
+#line 34 "token.l"
 { fprintf(stderr, "Unknown token : %c\n", yytext[0]); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 38 "token.l"
+#line 36 "token.l"
 ECHO;
 	YY_BREAK
-#line 820 "token.cpp"
+#line 818 "token.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1824,6 +1822,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 38 "token.l"
+#line 36 "token.l"
 
 

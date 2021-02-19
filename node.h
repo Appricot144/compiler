@@ -5,7 +5,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-#include<llvm/Support/Casting.h>
+#include <string>
+#include <llvm/Support/Casting.h> //isa<> dyn_cast<> 用
 
 class node_Function;
 class node_Function_Declaration;
@@ -53,6 +54,12 @@ class node_Expression : public node_Statement{
   public:
     node_Expression(NodeID id) : node_Statement(id) {}
     ~node_Expression(){}
+
+    static inline bool classof(node_Expression const*){return true;}
+    //渡されたExpressionノードがIntegerIDか判定する
+    static inline bool classof(node_Statement const* base){
+      return base->get_NodeID()==ExpressionID;
+    }
 };
 
 class node_Program{
@@ -108,7 +115,7 @@ class node_Function_Declaration{
       std::string c_name = *Name;
       return c_name;
     }
-    // i番目の引数の名前を取り出す
+    // i番目の引数を取り出す
     node_Variable_Declaration* get_Param(int i){
       if(i < Params->size())
         return Params->at(i);
@@ -248,7 +255,7 @@ class node_Binary_Operator : public node_Expression{
 
     static inline bool classof(node_Binary_Operator const*){return true;}
     //渡されたStatementノードがBinaryOpIDか判定する
-    static inline bool classof(node_Binary_Operator const* base){
+    static inline bool classof(node_Statement const* base){
       return base->get_NodeID()==BinaryOpID;
     }
 

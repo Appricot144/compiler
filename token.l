@@ -1,5 +1,5 @@
 %{
-#include <string>
+#include "node.h"
 #include "parser.hpp"
 
 extern "C" int yywrap() { }

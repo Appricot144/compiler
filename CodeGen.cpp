@@ -3,15 +3,15 @@
 
 // コンストラクタ
 CodeGen::CodeGen(){
-  Builder = new IRBuilder<>(getGlobalContext());
+  Builder = new IRBuilder<>(Context);
   Mod = NULL;
 }
 
 // コード生成のトリガとなるdoCodeGen関数
 // params : node_Program    Module名（入力ファイル）
 // return 成功時 : true　 失敗時 : false
-bool CodeGen::do_CodeGen(node_Program &program, std::string name){
-  return generate_Program(program, name);
+bool CodeGen::do_CodeGen(node_Program *Program, std::string name){
+  return generate_Program(Program, name);
 }
 
 // Moduleの取得
@@ -19,7 +19,7 @@ Module &CodeGen::get_Module(){
   if(Mod)
     return *Mod;
   else
-    return *(new Module("null", getGlobalContext()));
+    return *(new Module("null", Context));
 }
 
 
@@ -29,13 +29,13 @@ Module &CodeGen::get_Module(){
 // return 成功時 : true　 失敗時 : false
 // Programノードの内にあるFunction_DeclarationノードとFunctionノードを探索して、
 // それぞれのコード生成メソッドを呼び出す。
-bool CodeGen::generate_Program(node_Program &program, std::string name){
+bool CodeGen::generate_Program(node_Program *program, std::string name){
   //Module生成
-  Mod = new Module(name, getGlobalContext());
+  Mod = new Module(name, Context);
 
   // Function_declaration
   for(int i=0; ; i++){
-    node_Function_Declaration *proto = program.get_Prototype(i);
+    node_Function_Declaration *proto = program->get_Prototype(i);
     if(!proto)
       break;
     else if(!generate_Prototype(proto, Mod)){
@@ -46,7 +46,7 @@ bool CodeGen::generate_Program(node_Program &program, std::string name){
 
   // Function
   for(int i=0; ; i++){
-    node_Function *func = program.get_Function(i);
+    node_Function *func = program->get_Function(i);
     if(!func)
       break;
     else if(!generate_Function(func, Mod)){
@@ -69,7 +69,7 @@ Function* CodeGen::generate_Prototype(node_Function_Declaration *proto, Module *
     if(func->arg_size()==proto->get_Params_Size() && func->empty()){
       return func;
     }else{
-      fpritnf(stderr, "In CodeGen: duplicate declaration function : %s\n", proto->get_Name());
+      fprintf(stderr, "In CodeGen: duplicate declaration function : %s\n", proto->get_Name());
       return NULL;
     }
   }
@@ -78,18 +78,18 @@ Function* CodeGen::generate_Prototype(node_Function_Declaration *proto, Module *
 
   //create arg_types
   std::vector<Type*> int_types(proto->get_Params_Size(),
-                               Type::getInt32Ty(getGlobalContext()) );
+                               Type::getInt32Ty(Context) );
   //create func type
-  FunctionType *func_type = FunctionType::get(Type::getInt32Ty(getGlobalContext()),
+  FunctionType *func_type = FunctionType::get(Type::getInt32Ty(Context),
                                               int_types,
                                               false);
   //create function
-  func = Function::Create(func_type, Function::ExternalLinkage, proto->getName(), mod);
+  func = Function::Create(func_type, Function::ExternalLinkage, proto->get_Name(), mod);
 
   // 設定したfucntionの引数に名前をつける
   Function::arg_iterator arg_iter=func->arg_begin();
   for(int i=0; i<proto->get_Params_Size(); i++){
-    arg_iter->setName(proto->get_Param(i));
+    arg_iter->setName(proto->get_Param(i)->get_Name());
     arg_iter++;
   }
 
@@ -107,7 +107,7 @@ Function* CodeGen::generate_Function(node_Function *func_node, Module *mod){
     return NULL;
   }
   Current_Func = func;
-  BasicBlock *bblock = BasicBlock::Create(getGlobalContext(), "entry", func);
+  BasicBlock *bblock = BasicBlock::Create(Context, "entry", func);
   Builder->SetInsertPoint(bblock);
   //Functionのボディを生成する
   generate_Block(func_node->get_FuncBlock());
@@ -122,7 +122,7 @@ Function* CodeGen::generate_Function(node_Function *func_node, Module *mod){
 //ブロック内のStatementノードを探索し、各種命令生成メソッドを呼び出す。
 Value* CodeGen::generate_Block(node_Block *block){
 
-  node_Variable_Declaration v_decl;
+  node_Variable_Declaration *v_decl;
   Value *v = NULL;
 
   //Variable Declaration
@@ -158,17 +158,17 @@ Value* CodeGen::generate_Block(node_Block *block){
 // param  : node_Variable_Declaration (変数宣言ノード)
 // return : 生成したValueのポインタ
 //alloca命令を生成しする．argsだった時は引数の値を格納する．
-Value *Codegen::generate_Variable_Declaration(node_Variable_Declaration *v_decl){
+Value *CodeGen::generate_Variable_Declaration(node_Variable_Declaration *v_decl){
   //create allocate
-  AllocaInt *alloca = Builder->CreateAlloca(Type::getInt32Ty(getGlobalContext()),
+  AllocaInst *alloca = Builder->CreateAlloca(Type::getInt32Ty(Context),
                                             0,
                                             v_decl->get_Name());
 
   //if args allocate
   if(v_decl->get_Type() == node_Variable_Declaration::param){
     //store args
-    ValueSymbolTable &vs_table = Current_Func->getValueSymbolTable();
-    Builder->CreateStore(vs_table.lookup(v_decl->get_Name()), alloca);
+    ValueSymbolTable *vs_table = Current_Func->getValueSymbolTable();
+    Builder->CreateStore(vs_table->lookup(v_decl->get_Name()), alloca);
   }
 
   return alloca;
@@ -184,7 +184,7 @@ Value *CodeGen::generate_Statement(node_Statement *stmt){
     return generate_Function_Call(dyn_cast<node_Function_Call>(stmt));
   }else if(isa<node_Return>(stmt)){
     return generate_Return(dyn_cast<node_Return>(stmt));
-  }else if(isa<generate_Expression>(stmt)){
+  }else if(isa<node_Expression>(stmt)){
     return generate_Expression(dyn_cast<node_Expression>(stmt));
   }else{
     return NULL;
@@ -202,11 +202,11 @@ Value *CodeGen::generate_Binary_Expression(node_Binary_Operator *bin_expr){
   Value *rhs_v;
 
   //assignment
-  if(bin_expr->getOp() == '='){
+  if(bin_expr->get_Op() == '='){
     //lhs is variable
     node_Variable *lhs_var = dyn_cast<node_Variable>(lhs);
-    ValueSymbolTable &vs_table = Current_Func->getValueSymbolTable();
-    lhs_v = vs_table.lookup(lhs_var->get_Name());
+    ValueSymbolTable *vs_table = Current_Func->getValueSymbolTable();
+    lhs_v = vs_table->lookup(lhs_var->get_Name());
 
   //other oeprand
   }else{
@@ -217,7 +217,7 @@ Value *CodeGen::generate_Binary_Expression(node_Binary_Operator *bin_expr){
 
       //Variable?
     }else if(isa<node_Variable>(lhs)){
-      lhs_v = generete_Variable(dyn_cast<node_Variable>(lhs));
+      lhs_v = generate_Variable(dyn_cast<node_Variable>(lhs));
 
       //Integer?
     }else if(isa<node_Integer>(lhs)){
@@ -246,19 +246,19 @@ Value *CodeGen::generate_Binary_Expression(node_Binary_Operator *bin_expr){
     rhs_v = generate_Integer(val->get_Val());
   }
 
-  if(bin_expr->getOp() == '='){
+  if(bin_expr->get_Op() == '='){
     //store
     return Builder->CreateStore(rhs_v, lhs_v);
-  }else if(bin_expr->getOp() == '+' ){
+  }else if(bin_expr->get_Op() == '+' ){
     //add
     return Builder->CreateAdd(lhs_v, rhs_v, "add_tmp");
-  }else if(bin_expr->getOp() == '-'){
+  }else if(bin_expr->get_Op() == '-'){
     //sub
     return Builder->CreateSub(lhs_v, rhs_v, "sub_tmp");
-  }else if(bin_expr->getOp() == '*'){
+  }else if(bin_expr->get_Op() == '*'){
     //mul
     return Builder->CreateMul(lhs_v, rhs_v, "mul_tmp");
-  }else if(bin_expr->getOp() == '/'){
+  }else if(bin_expr->get_Op() == '/'){
     //div
     return Builder->CreateSDiv(lhs_v, rhs_v, "div_tmp");
   }
@@ -272,12 +272,12 @@ Value *CodeGen::generate_Binary_Expression(node_Binary_Operator *bin_expr){
 Value *CodeGen::generate_Function_Call(node_Function_Call *func_call){
   std::vector<Value*> arg_vec; //args
   node_Expression *arg;
-  Velue *arg_v;
-  ValueSymbolTable &vs_table = Current_Func->getValueSymbolTable();
+  Value *arg_v;
+  ValueSymbolTable *vs_table = Current_Func->getValueSymbolTable();
 
   //args
   for(int i=0; ; i++){
-    if(!(arg=func_call->get_Args(i))){
+    if(!(arg=func_call->get_Args().at(i))){
       break;
     }
 
@@ -289,9 +289,9 @@ Value *CodeGen::generate_Function_Call(node_Function_Call *func_call){
     }else if(isa<node_Binary_Operator>(arg)){
       arg_v = generate_Binary_Expression(dyn_cast<node_Binary_Operator>(arg));
       node_Binary_Operator *bin_expr = dyn_cast<node_Binary_Operator>(arg);
-      if(bin_expr->getOp() == '='){ //代入演算の時は、store命令ではなくload命令を出力する
+      if(bin_expr->get_Op() == '='){ //代入演算の時は、store命令ではなくload命令を出力する
         node_Variable *var = dyn_cast<node_Variable>(bin_expr->get_LHS());
-        arg_v = Builder->CreateLoad(vs_table.lookup(var->get_Name()), "arg_val");
+        arg_v = Builder->CreateLoad(vs_table->lookup(var->get_Name()), "arg_val");
       }
 
       //is Variable
@@ -346,19 +346,20 @@ Value *CodeGen::generate_Expression(node_Expression *expr){
     return generate_Function_Call(dyn_cast<node_Function_Call>(expr));
   }else{
     return NULL;
+  }
 }
 
 //変数参照のコード生成メソッド
 // Params : node_Variable
 // return : 生成したValueのポインタ
 Value *CodeGen::generate_Variable(node_Variable *var){
-  ValueSymbolTable &vs_table = Current_Func->getValueSymbolTable();
-  return Builder->CreateLoad(vs_table.lookup(var->get_Name()), "vat_tmp");
+  ValueSymbolTable *vs_table = Current_Func->getValueSymbolTable();
+  return Builder->CreateLoad(vs_table->lookup(var->get_Name()), "vat_tmp");
 }
 
 //int型定数の生成メソッド
 // Params : int (生成する定数の値)
 // return : 生成したValueのポインタ
 Value *CodeGen::generate_Integer(int value){
-  return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), value);
+  return ConstantInt::get(Type::getInt32Ty(Context), value);
 }

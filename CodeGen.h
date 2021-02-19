@@ -1,22 +1,28 @@
+#ifndef ___CODEGEN_H
+#define ___CODEGEN_H
+
 //　コード生成するクラス
-#include <llvm/Module.h>
-#include <llvm/Function.h>
-#include <llvm/Type.h>
-#include <llvm/Value.h>
-#include <llvm/DerivedTypes.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/PassManager.h>
-#include <llvm/Instructions.h>
-#include <llvm/CallingConv.h>
-#include <llvm/Bitcode/ReaderWriter.h>
-#include <llvm/Analysis/Verifier.h>
-#include <llvm/Assembly/PrintModulePass.h>
-#include <llvm/Support/IRBuilder.h>
-#include <llvm/ModuleProvider.h>
-#include <llvm/Target/TargetSelect.h>
-#include <llvm/ExecutionEngine/GenericValue.h>
-#include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/Signals.h>
+#include <llvm/Support/PrettyStackTrace.h>
+#include "llvm/Support/Debug.h"
+#include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Support/raw_ostream.h>
+#include "llvm/IR/ValueSymbolTable.h"
+#include "llvm/IR/LegacyPassManager.h"
+
+//#include <llvm/Bitcode/ReaderWriter.h>
+//#include <llvm/ExecutionEngine/GenericValue.h>
+//#include <llvm/ExecutionEngine/JIT.h>
 
 using namespace llvm;
 
@@ -31,16 +37,19 @@ class CodeGen{
     Module *Mod;
     // LLVM-IRを生成するIRBuilderクラス
     IRBuilder<> *Builder;
+    // 定数や型の表を含めた、グローバル情報の管理をするもの
+    // ロックの保障がないので１スレッドにつき一つだけ使うこと。
+    LLVMContext Context;
 
   public:
-    CodeGen(){}
+    CodeGen();
     ~CodeGen(){}
 
-    bool do_CodeGen(node_Program &Program, std::string name);
+    bool do_CodeGen(node_Program *Program, std::string name);
     Module &get_Module();
 
   private:
-    bool generate_Program(node_Program &program, std::string name);
+    bool generate_Program(node_Program *program, std::string name);
     Function* generate_Prototype(node_Function_Declaration *proto, Module *mod);
     Function* generate_Function(node_Function *func, Module *mod);
     Value *generate_Block(node_Block *block);
@@ -53,3 +62,5 @@ class CodeGen{
     Value *generate_Variable(node_Variable *var);
     Value *generate_Integer(int value);
 };
+
+#endif

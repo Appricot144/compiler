@@ -44,9 +44,9 @@ void yyerror(const char* msg){fprintf(stderr, "Parser : %s", msg);}
 
 // トークン型の宣言
 %token IF ELSE RETURN
-%token <int_val>      INT
-%token <double_val>   DOUBLE
-%token <char_val>     CHAR
+%token <t_int>      INT
+%token <t_double>   DOUBLE
+%token <t_char>     CHAR
 %token <string>       IDENTIFIER
 
 // 非終端記号の宣言
