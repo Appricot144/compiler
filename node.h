@@ -40,7 +40,7 @@ class Node{
   public:
   Node(){}
   Node(NodeID id):ID(id){}
-  virtual ~Node(){}
+  ~Node(){}
   NodeID get_NodeID() const {return ID;}
 };
 
@@ -289,7 +289,7 @@ class node_Integer : public node_Expression{
 
   public:
     node_Integer(int val) : node_Expression(IntegerID), Val(val){}
-    ~node_Integer();
+    ~node_Integer(){}
 
     static inline bool classof(node_Integer const*){return true;}
     //渡されたExpressionノードがIntegerIDか判定する
@@ -307,7 +307,7 @@ class node_Double : public node_Expression{
 
   public:
     node_Double(double val) : node_Expression(DoubleID), Val(val){}
-    ~node_Double();
+    ~node_Double(){}
 
     static inline bool classof(node_Double const*){return true;}
     //渡されたExpressionノードがDoubleIDか判定する
@@ -325,7 +325,7 @@ class node_Char : public node_Expression{
 
   public:
     node_Char(char val) : node_Expression(CharID), Val(val){}
-    ~node_Char();
+    ~node_Char(){}
 
     static inline bool classof(node_Char const*){return true;}
     //渡されたExpressionノードがIntegerIDか判定する
