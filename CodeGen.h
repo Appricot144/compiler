@@ -50,8 +50,8 @@ class CodeGen{
 
   private:
     bool generate_Program(node_Program *program, std::string name);
-    Function* generate_Prototype(node_Function_Declaration *proto, Module *mod);
-    Function* generate_Function(node_Function *func, Module *mod);
+    Function *generate_Prototype(node_Function_Declaration *proto, Module *mod);
+    Function *generate_Function(node_Function *func, Module *mod);
     Value *generate_Block(node_Block *block);
     Value *generate_Variable_Declaration(node_Variable_Declaration *v_decl);
     Value *generate_Statement(node_Statement *stmt);

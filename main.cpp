@@ -18,10 +18,12 @@ int main(int argc, char **argv)
   input_Filename = argv[1];
   output_Filename = argv[2];
 
+  /*
   InitializeNativeTarget();
   sys::PrintStackTraceOnErrorSignal(argv[0]);
   PrettyStackTraceProgram X(argc, argv);
   EnableDebugBuffering = true;
+  */
 
   //構文解析
   yyin = fopen(argv[1], "r");
@@ -32,7 +34,7 @@ int main(int argc, char **argv)
   }
   //コード生成
   CodeGen *codegen = new CodeGen();
-  if(codegen->do_CodeGen(Program, input_Filename)){
+  if(!codegen->do_CodeGen(Program, input_Filename)){
     fprintf(stderr, "error at CodeGen\n");
     SAFE_DELETE(codegen);
     exit(1);
@@ -54,5 +56,6 @@ int main(int argc, char **argv)
   raw_stream.close();
 
   SAFE_DELETE(codegen);
+
   return 0;
 }

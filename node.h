@@ -64,14 +64,14 @@ class node_Expression : public node_Statement{
 
 class node_Program{
   // 関数宣言の集合
-  std::vector<node_Function_Declaration*> *Function_Decl_List;
+  std::vector<node_Function_Declaration*> Function_Decl_List;
   // 関数定義の集合
-  std::vector<node_Function*> *Function_List;
+  std::vector<node_Function*> Function_List;
 
   public:
-    node_Program(std::vector<node_Function*> *func_list)
+    node_Program(std::vector<node_Function*> func_list)
     : Function_List(func_list){}
-    node_Program(std::vector<node_Function_Declaration*> *func_decl_list, std::vector<node_Function*> *func_list)
+    node_Program(std::vector<node_Function_Declaration*> func_decl_list, std::vector<node_Function*> func_list)
     : Function_Decl_List(func_decl_list), Function_List(func_list){}
     ~node_Program(){}
 
@@ -80,16 +80,16 @@ class node_Program{
 
     // i番目のプロトタイプ宣言を取り出す
     node_Function_Declaration* get_Prototype(int i){
-      if(i < Function_Decl_List->size())
-        return Function_Decl_List->at(i);
+      if(i < Function_Decl_List.size())
+        return Function_Decl_List.at(i);
       else
         return NULL;
     }
 
     // i番目の関数を取り出す
     node_Function* get_Function(int i){
-      if(i < Function_List->size())
-        return Function_List->at(i);
+      if(i < Function_List.size())
+        return Function_List.at(i);
       else
         return NULL;
     }
@@ -101,10 +101,10 @@ class node_Function_Declaration{
   // 関数の名前
   std::string *Name;
   // 引数の名前
-  std::vector<node_Variable_Declaration*> *Params;
+  std::vector<node_Variable_Declaration*> Params;
 
   public:
-    node_Function_Declaration(std::string *name, std::vector<node_Variable_Declaration*> *params)
+    node_Function_Declaration(std::string *name, std::vector<node_Variable_Declaration*> params)
     : Name(name), Params(params){}
     node_Function_Declaration(std::string *name)
     : Name(name){}
@@ -117,13 +117,13 @@ class node_Function_Declaration{
     }
     // i番目の引数を取り出す
     node_Variable_Declaration* get_Param(int i){
-      if(i < Params->size())
-        return Params->at(i);
+      if(i < Params.size())
+        return Params.at(i);
       else
         return NULL;
     }
     // 引数の数を取り出す
-    int get_Params_Size(){return Params->size();}
+    int get_Params_Size(){return Params.size();}
 };
 
 // 変数宣言
@@ -165,25 +165,25 @@ class node_Variable_Declaration : public node_Statement{
 // 関数やIF文などの｛｝で囲まれた部分 : Statementの集合
 class node_Block {
   // Statementの集合
-  std::vector<node_Statement*> *Statement_List;
+  std::vector<node_Statement*> Statement_List;
   // 変数定義の集合
   // 変数定義のノードはここに入れる
   // std::vector<node_Variable_Declaration*> *Variable_Decl_List;
 
   public:
-    node_Block(std::vector<node_Statement*> *stmt_list)
+    node_Block(std::vector<node_Statement*> stmt_list)
     : Statement_List(stmt_list) {}
     ~node_Block(){}
 
     // Statement_ListにNodeを追加する
-    bool add_Statement(node_Statement *stmt){Statement_List->push_back(stmt);}
+    bool add_Statement(node_Statement *stmt){Statement_List.push_back(stmt);}
     // Variable_Decl_Listに変数定義のNodeを追加する
     //bool add_Variable_Decl(node_Variable_Declaration *vdecl){}
 
     // Statement_Listからi番目の要素を取り出す
     node_Statement* get_Statement(int i){
-      if(i < Statement_List->size())
-        return Statement_List->at(i);
+      if(i < Statement_List.size())
+        return Statement_List.at(i);
       else
         return NULL;
     }
@@ -341,10 +341,10 @@ class node_Function_Call : public node_Expression {
   // 呼び出される関数の名前
   std::string *Callee;
   // 関数呼び出しの引数
-  std::vector<node_Expression*> *Args;
+  std::vector<node_Expression*> Args;
 
   public:
-    node_Function_Call(std::string *callee, std::vector<node_Expression*> *args)
+    node_Function_Call(std::string *callee, std::vector<node_Expression*> args)
      : node_Expression(FuncCallID), Callee(callee), Args(args){}
     ~node_Function_Call(){}
 
@@ -359,7 +359,7 @@ class node_Function_Call : public node_Expression {
       return c_Callee;
     }
     std::vector<node_Expression*> get_Args(){
-      std::vector<node_Expression*> c_Args = *Args;
+      std::vector<node_Expression*> c_Args = Args;
       return c_Args;
     }
 };

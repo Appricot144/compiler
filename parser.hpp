@@ -48,10 +48,11 @@ extern int yydebug;
     IF = 258,
     ELSE = 259,
     RETURN = 260,
-    INT = 261,
-    DOUBLE = 262,
-    CHAR = 263,
-    IDENTIFIER = 264
+    TY_INT = 261,
+    INT = 262,
+    DOUBLE = 263,
+    CHAR = 264,
+    IDENTIFIER = 265
   };
 #endif
 
@@ -60,7 +61,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 18 "parser.y" /* yacc.c:1909  */
+#line 19 "parser.y" /* yacc.c:1909  */
 
   Node          *node;
   node_Program  *program;
@@ -87,7 +88,7 @@ union YYSTYPE
   double t_double;
   char t_char;
 
-#line 91 "parser.hpp" /* yacc.c:1909  */
+#line 92 "parser.hpp" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

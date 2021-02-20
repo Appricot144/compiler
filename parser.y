@@ -2,6 +2,7 @@
 /* C の宣言部 */
 #include "node.h"
 #include "Symbol_Table.h"
+
 node_Program *Program;      //rootノード 最終的なAST
 variable_Table var_Table;  //変数の記号表
 
@@ -43,7 +44,7 @@ void yyerror(const char* msg){fprintf(stderr, "Parser : %s", msg);}
 }
 
 // トークン型の宣言
-%token IF ELSE RETURN
+%token IF ELSE RETURN TY_INT
 %token <t_int>      INT
 %token <t_double>   DOUBLE
 %token <t_char>     CHAR
@@ -82,11 +83,11 @@ void yyerror(const char* msg){fprintf(stderr, "Parser : %s", msg);}
 
 // 宣言時に使える型はintのみ
 // 数値としてはint double charが使える
-module : program  { Program = $1; }
+module : program  { Program = $1;}
        ;
 
-program : func_decl_list func_defi_list { $$ = new node_Program($1, $2); }
-        | func_defi_list                { $$ = new node_Program($1); }
+program : func_decl_list func_defi_list { $$ = new node_Program(*$1, *$2); }
+        | func_defi_list                { $$ = new node_Program(*$1); }
         ;
 
 func_decl_list : func_decl                { $$ = new std::vector<node_Function_Declaration*>; $$->push_back($1); }
@@ -97,7 +98,7 @@ func_defi_list : func_defi                { $$ = new std::vector<node_Function*>
                | func_defi_list func_defi { $1->push_back($2); }
                ;
 
-block : '{' stmt_list '}' { $$ = new node_Block($2); }
+block : '{' stmt_list '}' { $$ = new node_Block(*$2); }
       ;
 
 stmt_list : stmt            { $$ = new std::vector<node_Statement*>; $$->push_back($1); }
@@ -110,8 +111,8 @@ stmt : var_decl             { $$ = $1; }
      | return               { $$ = $1; }
      ;
 
-func_decl : "int" ident '(' func_args_decl ')' { $$ = new node_Function_Declaration($2, $4); }
-          | "int" ident '(' ')'                { $$ = new node_Function_Declaration($2); }
+func_decl : TY_INT ident '(' func_args_decl ')' { $$ = new node_Function_Declaration($2, *$4); }
+          | TY_INT ident '(' ')'                { $$ = new node_Function_Declaration($2); }
           ;
 
 func_defi : func_decl block { $$ = new node_Function($1,$2);}
@@ -121,7 +122,7 @@ func_args_decl : var_decl                     { $$ = new std::vector<node_Variab
                | func_args_decl ',' var_decl  { $3->set_Type(node_Variable_Declaration::param); $1->push_back($3); }
                ;
 
-var_decl : "int" ident  { $$ = new node_Variable_Declaration($2); }
+var_decl : TY_INT ident  { $$ = new node_Variable_Declaration($2); }
          ;
 
 //if_stmt : IF '(' expr ')' block             {}
@@ -140,13 +141,13 @@ ident : IDENTIFIER  { $$ = $1; }
       ;
 
 expr : factor                   { $$ = $1; }
-     | ident '(' call_args ')'  { $$ = new node_Function_Call($1, $3); }
+     | ident '(' call_args ')'  { $$ = new node_Function_Call($1, *$3); }
      | ident '=' expr           { $$ = new node_Binary_Operator($<t_char>2, var_Table.get_Tuple(*$1), $3); }
      | expr '+' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
      | expr '-' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
      | expr '*' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
      | expr '/' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
-     | ident                    { $$ = new node_Variable(*$1); }
+     | ident                    { $$ = new node_Variable(*$1); puts("ident");}
      ;
 
 factor : INT            { $$ = new node_Integer($1); }
