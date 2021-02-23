@@ -14,17 +14,17 @@ class variable_Table{
     // あった場合、二重定義エラー。
     bool add_Tuple(std::string &name){
       for(int i=0; i<Table.size(); i++){
-        if( Table.at(i)->get_Name() == name)
-          break;
-        else{
-          node_Variable *var = new node_Variable(name);
-          Table.push_back(var);
-          return true;
+        if( Table.at(i)->get_Name() == name){
+          //二重定義エラー
+          std::cout << "In Parser: duplicate declaration variable : " << name << std::endl;
+          return false;
         }
       }
-      //二重定義エラー
-      std::cout << "In Parser: duplicate declaration variable : %s" << name << std::endl;
-      return false;
+
+      //記号表にないなら登録
+      node_Variable *var = new node_Variable(name);
+      Table.push_back(var);
+      return true;
     }
     // 渡された変数が宣言済みの変数か調べる。
     // 宣言済みであった場合、そのインスタンスのポインタを返す。
@@ -36,10 +36,16 @@ class variable_Table{
       }
 
       //未定義参照エラー
-      std::cout << "In Parser: Undefined variable : %s" << name << std::endl;
+      std::cout << "In Parser: Undefined variable : " << name << std::endl;
       node_Variable *tmp = new node_Variable(nullptr);
       return tmp;
     }
+
+    // 変数の記号表をリフレッシュするメソッド
+    void refresh_Table(){
+      Table.clear();
+    }
+
 };
 
 // 関数の記号表

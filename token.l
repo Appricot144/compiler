@@ -10,7 +10,7 @@ extern "C" int yywrap() { }
 // floatingはdouble型の数値を返す
 // charactorはchar型の1文字を返す
 // identifierはstring型の文字列を返す
-// 二項演算子はstring型の文字を返す
+// operatorはchar*型を返す
 %}
 
 space       [ \t\n]+
@@ -31,14 +31,15 @@ other       .
 "}"           { PUT; return '}'; }
 "("           { PUT; return '('; }
 ")"           { PUT; return ')'; }
+","           { PUT; return ','; }
 {space}       { }
-{operator}    { return yytext[0]; }
+{operator}    { PUT; return yytext[0]; }
 {integer}     { PUT; yylval.t_int = std::atoi(yytext); return INT; }
 {floating}    { yylval.t_double = std::atof(yytext); return DOUBLE; }
-{charactor}   { yylval.t_char = yytext[1]; return CHAR; }
+{charactor}   { yylval.t_char = yytext[0]; return CHAR; }
 {identifier}  { PUT; yylval.string = new std::string(yytext, yyleng); return IDENTIFIER; }
-";"           ;
-$+            ;
-{other}       { fprintf(stderr, "Unknown token : %s\n", yytext); }
+";"           { }
+'\xd'         { }
+{other}       { fprintf(stderr, "Unknown token : %x\n", yytext[0]); }
 
 %%

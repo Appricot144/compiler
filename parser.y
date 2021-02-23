@@ -4,7 +4,7 @@
 #include "Symbol_Table.h"
 
 node_Program *Program;      //rootノード 最終的なAST
-variable_Table var_Table;  //変数の記号表
+variable_Table var_table;  //変数の記号表
 
 extern char *input_Filename;
 extern FILE *yyin;
@@ -98,14 +98,11 @@ func_defi_list : func_defi                { $$ = new std::vector<node_Function*>
                | func_defi_list func_defi { $1->push_back($2); }
                ;
 
-block : '{' stmt_list '}' { $$ = new node_Block(*$2); }
-      ;
-
 stmt_list : stmt            { $$ = new std::vector<node_Statement*>; $$->push_back($1); }
           | stmt_list stmt  { $1->push_back($2); }
           ;
 
-stmt : var_decl             { $$ = $1; }
+stmt : var_decl             { $$ = $1; $1->set_Type(node_Variable_Declaration::local); }
      | expr                 { $$ = $1; }
    /*| if_stmt              {}*/
      | return               { $$ = $1; }
@@ -122,8 +119,11 @@ func_args_decl : var_decl                     { $$ = new std::vector<node_Variab
                | func_args_decl ',' var_decl  { $3->set_Type(node_Variable_Declaration::param); $1->push_back($3); }
                ;
 
-var_decl : TY_INT ident  { $$ = new node_Variable_Declaration($2); }
+var_decl : TY_INT ident  { $$ = new node_Variable_Declaration($2); var_table.add_Tuple(*$2);}
          ;
+
+block : '{' stmt_list '}' { $$ = new node_Block(*$2); var_table.refresh_Table(); }
+      ;
 
 //if_stmt : IF '(' expr ')' block             {}
 //        | IF '(' expr ')' block ELSE block  {}
@@ -142,12 +142,12 @@ ident : IDENTIFIER  { $$ = $1; }
 
 expr : factor                   { $$ = $1; }
      | ident '(' call_args ')'  { $$ = new node_Function_Call($1, *$3); }
-     | ident '=' expr           { $$ = new node_Binary_Operator($<t_char>2, var_Table.get_Tuple(*$1), $3); }
-     | expr '+' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
-     | expr '-' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
-     | expr '*' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
-     | expr '/' expr            { $$ = new node_Binary_Operator($<t_char>2, $1, $3); }
-     | ident                    { $$ = new node_Variable(*$1); puts("ident");}
+     | ident '=' expr           { $$ = new node_Binary_Operator('=', var_table.get_Tuple(*$1), $3); }
+     | expr '+' expr            { $$ = new node_Binary_Operator('+', $1, $3); }
+     | expr '-' expr            { $$ = new node_Binary_Operator('-', $1, $3); }
+     | expr '*' expr            { $$ = new node_Binary_Operator('*', $1, $3); }
+     | expr '/' expr            { $$ = new node_Binary_Operator('/', $1, $3); }
+     | ident                    { $$ = new node_Variable(*$1); }
      ;
 
 factor : INT            { $$ = new node_Integer($1); }

@@ -42,12 +42,16 @@ class Node{
   Node(NodeID id):ID(id){}
   ~Node(){}
   NodeID get_NodeID() const {return ID;}
+  void set_NodeID(NodeID id){ID = id;}
 };
 
 class node_Statement : public Node{
+  //what kind of Statement is this? expr or ret or ...
+  NodeID StmtID = StatementID;
   public:
-    node_Statement(NodeID id) : Node(id) {}
+    node_Statement(NodeID id);
     ~node_Statement(){}
+    NodeID get_StmtID() const {return StmtID;}
 };
 
 class node_Expression : public node_Statement{
@@ -56,9 +60,9 @@ class node_Expression : public node_Statement{
     ~node_Expression(){}
 
     static inline bool classof(node_Expression const*){return true;}
-    //渡されたExpressionノードがIntegerIDか判定する
+    //渡されたStatementノードがExpressionIDか判定する
     static inline bool classof(node_Statement const* base){
-      return base->get_NodeID()==ExpressionID;
+      return base->get_StmtID()==ExpressionID;
     }
 };
 
@@ -358,9 +362,12 @@ class node_Function_Call : public node_Expression {
       std::string c_Callee = *Callee;
       return c_Callee;
     }
-    std::vector<node_Expression*> get_Args(){
-      std::vector<node_Expression*> c_Args = Args;
-      return c_Args;
+    //i番目の引数を取り出す
+    node_Expression* get_Args(int i){
+      if(i < Args.size())
+        return Args.at(i);
+      else
+        return NULL;
     }
 };
 

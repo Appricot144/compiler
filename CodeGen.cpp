@@ -82,14 +82,14 @@ Function* CodeGen::generate_Prototype(node_Function_Declaration *proto, Module *
   //create func type
   FunctionType *func_type = FunctionType::get(Type::getInt32Ty(Context),
                                               int_types,
-                                              false);
+                                              false );
   //create function
   func = Function::Create(func_type, Function::ExternalLinkage, proto->get_Name(), mod);
 
   // 設定したfucntionの引数に名前をつける
   Function::arg_iterator arg_iter=func->arg_begin();
   for(int i=0; i<proto->get_Params_Size(); i++){
-    arg_iter->setName(proto->get_Param(i)->get_Name());
+    arg_iter->setName(proto->get_Param(i)->get_Name().append("_arg") );
     arg_iter++;
   }
 
@@ -109,6 +109,16 @@ Function* CodeGen::generate_Function(node_Function *func_node, Module *mod){
   Current_Func = func;
   BasicBlock *bblock = BasicBlock::Create(Context, "entry", func);
   Builder->SetInsertPoint(bblock);
+
+  // 引数をBlockノードに格納する(要改善)
+  node_Function_Declaration *proto = func_node->get_Prototype();
+  node_Block *block = func_node->get_FuncBlock();
+  node_Variable_Declaration *arg;
+  for(int i=0; i<proto->get_Params_Size(); i++){
+    arg = proto->get_Param(i);
+    block->add_Statement(arg);
+  }
+
   //Functionのボディを生成する
   generate_Block(func_node->get_FuncBlock());
 
@@ -168,7 +178,7 @@ Value *CodeGen::generate_Variable_Declaration(node_Variable_Declaration *v_decl)
   if(v_decl->get_Type() == node_Variable_Declaration::param){
     //store args
     ValueSymbolTable *vs_table = Current_Func->getValueSymbolTable();
-    Builder->CreateStore(vs_table->lookup(v_decl->get_Name()), alloca);
+    Builder->CreateStore(vs_table->lookup(v_decl->get_Name().append("_arg")), alloca);
   }
 
   return alloca;
@@ -228,7 +238,7 @@ Value *CodeGen::generate_Binary_Expression(node_Binary_Operator *bin_expr){
   }
 
   // create rhs value
-    //binary?
+    //binary Expression?
   if(isa<node_Binary_Operator>(rhs)){
     rhs_v = generate_Binary_Expression(dyn_cast<node_Binary_Operator>(rhs));
 
@@ -277,7 +287,7 @@ Value *CodeGen::generate_Function_Call(node_Function_Call *func_call){
 
   //args
   for(int i=0; ; i++){
-    if(!(arg=func_call->get_Args().at(i))){
+    if(!(arg=func_call->get_Args(i))){
       break;
     }
 
@@ -324,6 +334,9 @@ Value *CodeGen::generate_Return(node_Return *ret){
     //is Binary Expression
   if(isa<node_Binary_Operator>(expr)){
     ret_v = generate_Binary_Expression(dyn_cast<node_Binary_Operator>(expr));
+    //is Function call
+  }else if(isa<node_Function_Call>(expr)){
+    ret_v = generate_Function_Call(dyn_cast<node_Function_Call>(expr));
     //is Variable
   }else if(isa<node_Variable>(expr)){
     ret_v = generate_Variable(dyn_cast<node_Variable>(expr));
@@ -354,7 +367,7 @@ Value *CodeGen::generate_Expression(node_Expression *expr){
 // return : 生成したValueのポインタ
 Value *CodeGen::generate_Variable(node_Variable *var){
   ValueSymbolTable *vs_table = Current_Func->getValueSymbolTable();
-  return Builder->CreateLoad(vs_table->lookup(var->get_Name()), "vat_tmp");
+  return Builder->CreateLoad(vs_table->lookup(var->get_Name()), "var_tmp");
 }
 
 //int型定数の生成メソッド

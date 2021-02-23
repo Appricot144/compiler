@@ -8,3 +8,13 @@ bool node_Program::empty(){
     return true;
   return false;
 }
+
+//コンストラクタ
+node_Statement::node_Statement(NodeID id){
+  set_NodeID(id);
+
+  if(get_NodeID()==VariableDeclID || get_NodeID()==ReturnID)
+    StmtID = StatementID;
+  else
+    StmtID = ExpressionID;
+}
